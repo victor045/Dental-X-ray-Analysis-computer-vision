@@ -1,17 +1,17 @@
-# 🦷 Dental X-ray Analysis App
+#  Dental X-ray Analysis App
 
 A Streamlit web application for analyzing dental X-ray images using deep learning models for both classification and detection.
 
-## ✨ Features
+##  Features
 
-- **🖼️ Image Upload**: Upload dental X-ray images (PNG, JPG, JPEG)
-- **🔍 Classification**: Classify dental conditions (Healthy, Cavity, Crown, Filling)
-- **📍 Detection**: Detect individual teeth with bounding boxes
-- **🌐 Bilingual**: English and Spanish interface
-- **🎨 Color-coded Results**: Different colors for different classifications
-- **📊 Confidence Scores**: View prediction confidence for each result
+- **Image Upload**: Upload dental X-ray images (PNG, JPG, JPEG)
+- **Classification**: Classify dental conditions (Healthy, Cavity, Crown, Filling)
+- **Detection**: Detect individual teeth with bounding boxes
+- **Bilingual**: English and Spanish interface
+- **Color-coded Results**: Different colors for different classifications
+- **Confidence Scores**: View prediction confidence for each result
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Local Development
 
@@ -43,7 +43,7 @@ A Streamlit web application for analyzing dental X-ray images using deep learnin
    - Set main file to: `correct_streamlit_app.py`
    - Click "Deploy"
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 dentexmodel/
@@ -58,28 +58,28 @@ dentexmodel/
 └── README.md                   # This file
 ```
 
-## 🧠 Models Used
+##  Models Used
 
 - **Classification**: PyTorch Lightning ResNet50 model
 - **Detection**: Detectron2 Faster R-CNN model
 - **Preprocessing**: ImageNet normalization
 
-## 🌐 Languages
+##  Languages
 
 - **English**: Default interface
 - **Spanish**: Select "Español" in the sidebar
 
-## 🎨 Color Coding
+##  Color Coding
 
-- **🟢 Green**: Healthy/Sano
-- **🔴 Red**: Cavity/Caries
-- **🔵 Blue**: Crown/Corona
-- **🟠 Orange**: Filling/Empaste
+- **Green**: Healthy/Sano
+- **Red**: Cavity/Caries
+- **Blue**: Crown/Corona
+- **Orange**: Filling/Empaste
 
-## 📝 License
+## License
 
 This project is part of the DentexModel research project.
 
-## 🤝 Contributing
+## Contributing
 
 Feel free to submit issues and enhancement requests!

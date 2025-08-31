@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  web-app:
+    build: .
+    container_name: dental-web-app
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./results:/app/results
+      - ../data:/app/data  # Mount the data directory to access trained models
+    environment:
+      - FLASK_ENV=production
+    restart: unless-stopped
+    networks:
+      - dental-network
+
+networks:
+  dental-network:
+    driver: bridge
+

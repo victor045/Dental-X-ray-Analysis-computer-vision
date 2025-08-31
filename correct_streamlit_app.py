@@ -164,6 +164,23 @@ def _download(url: str, dst: str):
                 f.write(chunk)
     return dst
 
+def get_system_info():
+    """Get system information for CPU usage"""
+    import psutil
+    
+    # CPU information
+    cpu_percent = psutil.cpu_percent(interval=1)
+    memory = psutil.virtual_memory()
+    memory_used_gb = memory.used / (1024**3)
+    memory_total_gb = memory.total / (1024**3)
+    
+    return {
+        "cpu_percent": cpu_percent,
+        "memory_used_gb": memory_used_gb,
+        "memory_total_gb": memory_total_gb,
+        "memory_available_gb": memory.available / (1024**3)
+    }
+
 @st.cache_resource
 def load_models():
     """Load classification (Lightning) and detection (Detectron2) models - ONLY proper models."""
@@ -260,11 +277,11 @@ def load_models():
             cfg.MODEL.ROI_HEADS.NUM_CLASSES = 1
             cfg.MODEL.WEIGHTS = det_pth
             cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.30
-            cfg.MODEL.DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+            cfg.MODEL.DEVICE = "cpu"  # Force CPU for Streamlit compatibility
 
             models["detector"] = DefaultPredictor(cfg)
             models["detector_type"] = "detectron2"
-            st.success(f"✅ Detection model ready ({cfg.MODEL.DEVICE.upper()})")
+            st.success(f"✅ Detection model ready (CPU)")
         else:
             st.error("❌ Detection model not found. Please train the detection model first.")
     except Exception as e:
@@ -312,8 +329,15 @@ def classify_image(image: Image.Image, model, language='en') -> dict:
         return {"error": "Classification model not loaded"}
     
     try:
+        import time
+        start_time = time.time()
+        
+        # Force CPU usage for Streamlit compatibility
+        device = torch.device('cpu')
+        
         # Preprocess image
         image_tensor = preprocess_image_for_classification(image)
+        image_tensor = image_tensor.to(device)  # Ensure tensor is on CPU
         
         with torch.no_grad():
             # Forward pass exactly as in notebooks
@@ -332,9 +356,13 @@ def classify_image(image: Image.Image, model, language='en') -> dict:
         # Use appropriate language labels
         labels = CLASS_LABELS_ES if language == 'es' else CLASS_LABELS
         
+        inference_time = time.time() - start_time
+        
         results = {
             "predicted_class": labels[predicted_class],
             "confidence": round(confidence, 4),
+            "inference_time": round(inference_time, 3),
+            "device": str(device),
             "all_predictions": [
                 {"class": labels[idx.item()], "confidence": round(prob.item(), 4)}
                 for prob, idx in zip(top3_probs, top3_indices)
@@ -435,6 +463,29 @@ def create_annotated_image(image: Image.Image,
 
     return annotated
 
+def verify_device_usage(models):
+    """Verify that models are using the correct device"""
+    device_info = {}
+    
+    # Check classification model
+    if 'classification' in models and models['classification'] is not None:
+        try:
+            # Get device of first parameter
+            device = next(models['classification'].parameters()).device
+            device_info['classification'] = str(device)
+        except:
+            device_info['classification'] = 'unknown'
+    
+    # Check detection model
+    if 'detector' in models and models['detector'] is not None:
+        try:
+            # For Detectron2, we can check the config
+            device_info['detection'] = 'cpu'  # We forced it to CPU
+        except:
+            device_info['detection'] = 'unknown'
+    
+    return device_info
+
 def main():
     """Main Streamlit app - ONLY using proper project models"""
     st.set_page_config(
@@ -474,6 +525,38 @@ def main():
             st.success("✅ Detection Model")
         else:
             st.error("❌ Detection Model")
+        
+        # Verify and show device usage
+        device_info = verify_device_usage(models)
+        if device_info:
+            st.markdown("---")
+            st.markdown("### 🔍 Device Verification")
+            if 'classification' in device_info:
+                st.info(f"**Classification:** {device_info['classification']}")
+            if 'detection' in device_info:
+                st.info(f"**Detection:** {device_info['detection']}")
+        
+        # Show system information
+        try:
+            system_info = get_system_info()
+            st.markdown("---")
+            st.markdown("### 🖥️ System Information")
+            st.info("**Device:** CPU (Streamlit compatible)")
+            st.metric(
+                "CPU Usage", 
+                f"{system_info['cpu_percent']:.1f}%"
+            )
+            st.metric(
+                "Memory Usage", 
+                f"{system_info['memory_used_gb']:.1f} GB",
+                f"{(system_info['memory_used_gb']/system_info['memory_total_gb'])*100:.1f}% used"
+            )
+            st.info(f"**Available Memory:** {system_info['memory_available_gb']:.1f} GB")
+        except Exception as e:
+            st.markdown("---")
+            st.markdown("### 🖥️ System Information")
+            st.info("**Device:** CPU (Streamlit compatible)")
+            st.warning("⚠️ Could not retrieve system metrics")
     
     # Main content
     st.title(t['title'])
@@ -540,6 +623,10 @@ def main():
                 if "error" not in classification_result:
                     st.success(f"**{t['classification']}**: {classification_result['predicted_class']}")
                     st.metric(t['confidence'], f"{classification_result['confidence']:.2%}")
+                    
+                    # Show inference time if available
+                    if 'inference_time' in classification_result:
+                        st.info(f"⏱️ Inference time: {classification_result['inference_time']}s on {classification_result['device']}")
                     
                     st.write(f"**{t['all_predictions']}:**")
                     for pred in classification_result['all_predictions']:

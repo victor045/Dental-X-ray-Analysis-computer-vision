@@ -1,28 +1,26 @@
-FROM python:3.8-slim
+# Use slim Python to keep the image small
+FROM python:3.10-slim
 
-# Set working directory
+# System deps needed by Pillow/OpenCV
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0 libsm6 libxext6 libxrender1 \
+ && rm -rf /var/lib/apt/lists/*
+
+# Avoid Python writing .pyc files & ensure unbuffered logs
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    STREAMLIT_SERVER_HEADLESS=true \
+    STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    gcc \
-    g++ \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
+# Copy only requirements first (better build cache)
+COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
+# Now copy the rest of the repo
 COPY . .
 
-# Set environment variables
-ENV DATA_ROOT=/app/data
-ENV PYTHONPATH=/app/src
-
-# Expose port
-EXPOSE 8501
-
-# Run the application
-CMD ["streamlit", "run", "correct_streamlit_app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# HF Spaces sets $PORT for you — Streamlit must listen on it
+CMD ["streamlit", "run", "streamlit_cloud_app.py", "--server.port=${PORT}", "--server.address=0.0.0.0"]

@@ -23,4 +23,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # HF Spaces sets $PORT for you — Streamlit must listen on it
-CMD ["streamlit", "run", "streamlit_cloud_app.py", "--server.port=${PORT}", "--server.address=0.0.0.0"]
+CMD streamlit run streamlit_cloud_app.py --server.port=$PORT --server.address=0.0.0.0
+

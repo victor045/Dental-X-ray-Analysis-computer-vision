@@ -22,6 +22,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Now copy the rest of the repo
 COPY . .
 
-# HF Spaces sets $PORT for you — Streamlit must listen on it
-CMD streamlit run streamlit_cloud_app.py --server.port=$PORT --server.address=0.0.0.0
+# optional but nice for docs
+EXPOSE 7860
 
+# IMPORTANT: bind to 7860 explicitly on HF Spaces Docker
+CMD streamlit run streamlit_cloud_app.py --server.port=7860 --server.address=0.0.0.0

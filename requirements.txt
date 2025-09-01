@@ -1,3 +1,14 @@
-altair
-pandas
-streamlit
+streamlit==1.37.1
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+ultralytics==8.3.5
+opencv-python-headless==4.10.0.84
+pillow==10.4.0
+albumentations==1.4.7
+numpy==1.26.4
+pandas==2.2.2
+psutil==6.0.0
+requests==2.32.3
+lightning==2.2.1
+torchmetrics==1.4.0
